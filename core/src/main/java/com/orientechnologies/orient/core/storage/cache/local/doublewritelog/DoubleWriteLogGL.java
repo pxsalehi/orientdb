@@ -350,7 +350,7 @@ public class DoubleWriteLogGL implements DoubleWriteLog {
               pageMap.put(new ORawPair<>(fileId, pageIndex + i), new ORawPair<>(segmentId, position));
             }
 
-            position += ((METADATA_SIZE + compressedLen + blockSize - -1) / blockSize) * blockSize;
+            position += (((long) METADATA_SIZE + compressedLen + blockSize - 1) / blockSize) * blockSize;
             channel.position(position);
           }
         }
