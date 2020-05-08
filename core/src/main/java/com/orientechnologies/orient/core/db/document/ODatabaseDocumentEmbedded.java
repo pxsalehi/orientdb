@@ -28,7 +28,6 @@ import com.orientechnologies.orient.core.Orient;
 import com.orientechnologies.orient.core.cache.OCommandCacheHook;
 import com.orientechnologies.orient.core.cache.OLocalRecordCache;
 import com.orientechnologies.orient.core.command.OBasicCommandContext;
-import com.orientechnologies.orient.core.command.OCommandManager;
 import com.orientechnologies.orient.core.command.OScriptExecutor;
 import com.orientechnologies.orient.core.config.OGlobalConfiguration;
 import com.orientechnologies.orient.core.db.*;
@@ -74,7 +73,6 @@ import com.orientechnologies.orient.core.storage.impl.local.OMicroTransaction;
 import com.orientechnologies.orient.core.storage.impl.local.paginated.ORecordSerializationContext;
 import com.orientechnologies.orient.core.tx.OTransactionAbstract;
 import com.orientechnologies.orient.core.tx.OTransactionData;
-import com.orientechnologies.orient.core.tx.OTransactionInternal;
 import com.orientechnologies.orient.core.tx.OTransactionOptimistic;
 
 import java.text.SimpleDateFormat;
@@ -82,7 +80,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by tglman on 27/06/16.
@@ -1088,12 +1085,12 @@ public class ODatabaseDocumentEmbedded extends ODatabaseDocumentAbstract impleme
           return true;
         }
 
-        if (!getSharedContext().getSecurity().canRead(this, doc)) {
-          return true;
-        }
-
-        ODocumentInternal.setPropertyAccess(doc, new OPropertyAccess(this, doc, getSharedContext().getSecurity()));
-        ODocumentInternal.setPropertyEncryption(doc, OPropertyEncryptionNone.instance());
+//        if (!getSharedContext().getSecurity().canRead(this, doc)) {
+//          return true;
+//        }
+//
+//        ODocumentInternal.setPropertyAccess(doc, new OPropertyAccess(this, doc, getSharedContext().getSecurity()));
+//        ODocumentInternal.setPropertyEncryption(doc, OPropertyEncryptionNone.instance());
       }
     }
     return callbackHooks(ORecordHook.TYPE.BEFORE_READ, identifiable) == ORecordHook.RESULT.SKIP;
