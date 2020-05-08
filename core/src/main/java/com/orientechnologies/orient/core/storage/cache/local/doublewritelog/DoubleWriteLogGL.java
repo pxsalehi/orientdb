@@ -351,6 +351,10 @@ public class DoubleWriteLogGL implements DoubleWriteLog {
             }
 
             position += (((long) METADATA_SIZE + compressedLen + blockSize - 1) / blockSize) * blockSize;
+            if (position < 0) {
+              System.out.printf("compressed len %d, pages %d, block size %d %n", compressedLen, pages,
+                  (((long) METADATA_SIZE + compressedLen + blockSize - 1) / blockSize) * blockSize);
+            }
             channel.position(position);
           }
         }
