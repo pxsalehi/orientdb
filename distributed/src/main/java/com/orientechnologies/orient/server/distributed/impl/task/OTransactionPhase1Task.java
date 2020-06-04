@@ -1,5 +1,6 @@
 package com.orientechnologies.orient.server.distributed.impl.task;
 
+import com.orientechnologies.common.util.OPair;
 import com.orientechnologies.orient.client.remote.message.OMessageHelper;
 import com.orientechnologies.orient.client.remote.message.tx.ORecordOperationRequest;
 import com.orientechnologies.orient.core.Orient;
@@ -19,7 +20,6 @@ import com.orientechnologies.orient.core.serialization.serializer.record.binary.
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import com.orientechnologies.orient.core.storage.impl.local.paginated.wal.OLogSequenceNumber;
 import com.orientechnologies.orient.core.tx.OTransactionId;
-import com.orientechnologies.orient.core.tx.OTransactionIndexChanges;
 import com.orientechnologies.orient.core.tx.OTransactionInternal;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.distributed.*;
@@ -46,6 +46,7 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
   private           OLogSequenceNumber                              lastLSN;
   private           List<ORecordOperation>                          ops;
   private           List<ORecordOperationRequest>                   operations;
+  private           SortedSet<OPair<String, String>>                uniqueIndexKeys;
   private           OCommandDistributedReplicateRequest.QUORUM_TYPE quorumType = OCommandDistributedReplicateRequest.QUORUM_TYPE.WRITE;
   private transient int                                             retryCount = 0;
   private volatile  boolean                                         finished;
@@ -55,11 +56,13 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
   public OTransactionPhase1Task() {
     ops = new ArrayList<>();
     operations = new ArrayList<>();
+    uniqueIndexKeys = new TreeSet<>();
   }
 
   public OTransactionPhase1Task(List<ORecordOperation> ops, OTransactionId transactionId) {
     this.ops = ops;
     operations = new ArrayList<>();
+    uniqueIndexKeys = new TreeSet<>();
     this.transactionId = transactionId;
     genOps(ops);
   }
@@ -198,6 +201,13 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
     if (lastLSN.getSegment() == -1 && lastLSN.getSegment() == -1) {
       lastLSN = null;
     }
+
+    size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      String k = in.readUTF();
+      String v = in.readUTF();
+      uniqueIndexKeys.add(new OPair<>(k, v));
+    }
   }
 
   private void convert(ODatabaseDocumentInternal database) {
@@ -265,6 +275,12 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
     } else {
       lastLSN.toStream(out);
     }
+
+    out.writeInt(uniqueIndexKeys.size());
+    for (OPair<String, String> key: uniqueIndexKeys) {
+      out.writeUTF(key.getKey());
+      out.writeUTF(key.getValue());
+    }
   }
 
   @Override
@@ -274,14 +290,18 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
 
   public void init(OTransactionId transactionId, OTransactionInternal operations) {
     this.transactionId = transactionId;
-    for (Map.Entry<String, OTransactionIndexChanges> indexOp : operations.getIndexOperations().entrySet()) {
-      final ODatabaseDocumentInternal database = operations.getDatabase();
-      if (indexOp.getValue().resolveAssociatedIndex(indexOp.getKey(), database.getMetadata().getIndexManagerInternal(), database)
-          .isUnique()) {
+    final ODatabaseDocumentInternal database = operations.getDatabase();
+    operations.getIndexOperations().forEach((index, changes) -> {
+      if (changes.resolveAssociatedIndex(index, database.getMetadata().getIndexManagerInternal(), database).isUnique()) {
         quorumType = OCommandDistributedReplicateRequest.QUORUM_TYPE.WRITE_ALL_MASTERS;
-        break;
+        for (Object keyWithChange : changes.changesPerKey.keySet()) {
+          uniqueIndexKeys.add(new OPair<>(index, "#" + keyWithChange.toString()));
+        }
+        if (!changes.nullKeyChanges.entries.isEmpty()) {
+          uniqueIndexKeys.add(new OPair<>(index, "#null"));
+        }
       }
-    }
+    });
     this.ops = new ArrayList<>(operations.getRecordOperations());
     genOps(this.ops);
   }
@@ -352,5 +372,9 @@ public class OTransactionPhase1Task extends OAbstractReplicatedTask {
 
   public OTransactionId getTransactionId() {
     return transactionId;
+  }
+
+  public SortedSet<OPair<String, String>> getUniqueIndexKeys() {
+    return uniqueIndexKeys;
   }
 }
