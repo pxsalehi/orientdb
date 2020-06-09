@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: orientdb
+  name: odb1
+  namespace: orientdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: odb1
+  template:
+    metadata:
+      labels:
+        run: odb1
+        app: orientdb
+    spec:
+      containers:
+        - args:
+            - dserver.sh
+          image: 192.168.2.119:5000/pxsalehi/orientdb:3.1.1
+          imagePullPolicy: Always
+          name: odb1
+          ports:
+            - containerPort: 2480
+              protocol: TCP
+            - containerPort: 2424
+              protocol: TCP
+            - containerPort: 2434
+              protocol: TCP
