@@ -39,6 +39,8 @@
 			</multicast>
 			<kubernetes enabled="false">
 				<namespace>orientdb</namespace>
+				<service-name>orientdb</service-name>
+				<service-port>2434</service-port>
 			</kubernetes>
 		</join>
 	</network>

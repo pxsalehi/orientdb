@@ -21,6 +21,7 @@ package com.orientechnologies.orient.server.hazelcast;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.FileSystemXmlConfig;
+import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.*;
 import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.orientechnologies.common.concur.OOfflineNodeException;
@@ -733,7 +734,24 @@ public class OHazelcastPlugin extends ODistributedAbstractPlugin
     hazelcastConfig.getMapConfig(OHazelcastDistributedMap.ORIENTDB_MAP).setMergePolicy(OHazelcastMergeStrategy.class.getName());
     //Disabled the shudown hook of hazelcast, shutdown is managed by orient hook
     hazelcastConfig.setProperty("hazelcast.shutdownhook.enabled", "false");
-
+    boolean enableKubernetesDiscoveryEnvVar = false;
+    String enableKubernetesDiscoveryEnvVarStr = System.getenv("ENABLE_KUBERNETES_DISCOVERY");
+    if (enableKubernetesDiscoveryEnvVarStr != null) {
+      enableKubernetesDiscoveryEnvVar = enableKubernetesDiscoveryEnvVarStr.equalsIgnoreCase("true");
+    }
+    if (enableKubernetesDiscoveryEnvVar) {
+      JoinConfig joinConfig = hazelcastConfig.getNetworkConfig().getJoin();
+      if (joinConfig.getKubernetesConfig() == null) {
+        ODistributedServerLog.warn(this, nodeName, null, DIRECTION.NONE,
+                "No Kubernetes join config found in %s. Ignore enabling Hazelcast Kubernetes discovery.",
+                hazelcastConfigFile);
+      } else {
+        ODistributedServerLog.info(this, nodeName, null, DIRECTION.NONE,
+                "Enabling Hazelcast Kubernetes discovery.");
+        joinConfig.getMulticastConfig().setEnabled(false);
+        joinConfig.getKubernetesConfig().setEnabled(true);
+      }
+    }
     return Hazelcast.newHazelcastInstance(hazelcastConfig);
   }
 
