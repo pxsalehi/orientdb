@@ -15,6 +15,7 @@ spec:
       labels:
         run: odb1
         app: orientdb
+        orientdb-cluster-member: "true"
     spec:
       containers:
         - args:
@@ -25,10 +26,12 @@ spec:
           env:
           - name: ENABLE_KUBERNETES_DISCOVERY
             value: "true"
+          - name: KUBERNETES_NAMESPACE
+            value: "orientdb"
           ports:
             - containerPort: 2480
               protocol: TCP
             - containerPort: 2424
               protocol: TCP
-            - containerPort: 2434
+            - containerPort: 5701
               protocol: TCP

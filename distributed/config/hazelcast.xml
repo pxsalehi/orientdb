@@ -38,9 +38,8 @@
 				<multicast-port>2434</multicast-port>
 			</multicast>
 			<kubernetes enabled="false">
-				<namespace>orientdb</namespace>
-				<service-name>orientdb</service-name>
-				<service-port>2434</service-port>
+				<pod-label-name>orientdb-cluster-member</pod-label-name>
+				<pod-label-value>true</pod-label-value>
 			</kubernetes>
 		</join>
 	</network>

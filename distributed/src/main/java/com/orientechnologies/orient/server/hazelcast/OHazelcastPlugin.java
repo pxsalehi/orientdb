@@ -22,6 +22,7 @@ package com.orientechnologies.orient.server.hazelcast;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.FileSystemXmlConfig;
 import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.*;
 import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.orientechnologies.common.concur.OOfflineNodeException;
@@ -747,9 +748,12 @@ public class OHazelcastPlugin extends ODistributedAbstractPlugin
                 hazelcastConfigFile);
       } else {
         ODistributedServerLog.info(this, nodeName, null, DIRECTION.NONE,
-                "Enabling Hazelcast Kubernetes discovery.");
+                "Enabling Hazelcast Kubernetes discovery. Setting Hazelcast port to %d.",
+                NetworkConfig.DEFAULT_PORT);
         joinConfig.getMulticastConfig().setEnabled(false);
         joinConfig.getKubernetesConfig().setEnabled(true);
+        // use default port in kubernetes. Hazelcast's pod-label-based discovery allows only default port!
+        hazelcastConfig.getNetworkConfig().setPort(NetworkConfig.DEFAULT_PORT);
       }
     }
     return Hazelcast.newHazelcastInstance(hazelcastConfig);
