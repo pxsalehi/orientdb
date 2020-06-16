@@ -4,7 +4,6 @@ metadata:
   labels:
     app: orientdb
   name: odb2
-  namespace: orientdb
 spec:
   replicas: 1
   selector:
@@ -26,12 +25,10 @@ spec:
           env:
           - name: ENABLE_KUBERNETES_DISCOVERY
             value: "true"
-          - name: KUBERNETES_NAMESPACE
-            value: "orientdb"
           ports:
             - containerPort: 2480
               protocol: TCP
             - containerPort: 2424
               protocol: TCP
-            - containerPort: 5701
+            - containerPort: 2434
               protocol: TCP
