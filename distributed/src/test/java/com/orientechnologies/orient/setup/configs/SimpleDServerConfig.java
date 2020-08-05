@@ -29,6 +29,11 @@ public class SimpleDServerConfig implements SetupConfig {
   }
 
   @Override
+  public int getClusterSize() {
+    return 3;
+  }
+
+  @Override
   public String getLocalConfigFile(String serverId) {
     return localServerConfigFiles.get(serverId);
   }

@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * It represents an abstract scenario test.
@@ -55,8 +56,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractScenarioTest extends AbstractServerClusterInsertTest {
 
-  protected static final int SERVERS = 3;
-  protected static final ODocument MISSING_DOCUMENT = new ODocument();
+  protected static final int        SERVERS          = 3;
+  protected static final ODocument  MISSING_DOCUMENT = new ODocument();
+  protected              AtomicLong totalVertices    = new AtomicLong(0);
 
   // FIXME: these should be parameters read from configuration file (or, if missing, defaulted to
   // some values)

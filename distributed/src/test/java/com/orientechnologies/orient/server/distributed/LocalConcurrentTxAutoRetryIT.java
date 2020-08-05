@@ -21,12 +21,14 @@ package com.orientechnologies.orient.server.distributed;
 
 import com.orientechnologies.orient.core.config.OGlobalConfiguration;
 import com.orientechnologies.orient.setup.ServerRun;
+import com.orientechnologies.orient.setup.SetupConfig;
+import com.orientechnologies.orient.setup.configs.DServerConfig;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /** Distributed TX test against "plocal" protocol. */
 public class LocalConcurrentTxAutoRetryIT extends AbstractDistributedConcurrentTxTest {
-  private static final int SERVERS = 3;
+  protected SetupConfig setupConfig = new DServerConfig();
 
   @Test
   @Ignore
@@ -43,7 +45,7 @@ public class LocalConcurrentTxAutoRetryIT extends AbstractDistributedConcurrentT
 
     try {
 
-      init(SERVERS);
+      init(setupConfig);
       prepare(false);
       execute();
 

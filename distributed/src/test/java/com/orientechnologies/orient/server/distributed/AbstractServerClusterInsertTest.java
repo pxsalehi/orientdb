@@ -337,7 +337,7 @@ public abstract class AbstractServerClusterInsertTest extends AbstractDistribute
   protected void prepare(boolean iCopyDatabaseToNodes, boolean iCreateDatabase) throws Exception {
     super.prepare(iCopyDatabaseToNodes, iCreateDatabase);
 
-    executeTestsOnServers = new ArrayList<ServerRun>(serverInstance);
+    executeTestsOnServers = new ArrayList<ServerRun>(localSetup.getServers());
   }
 
   protected void executeMultipleTest(final int serverNum)
@@ -657,7 +657,7 @@ public abstract class AbstractServerClusterInsertTest extends AbstractDistribute
   }
 
   protected void checkInsertedEntries() {
-    checkInsertedEntries(serverInstance);
+    checkInsertedEntries(localSetup.getServers());
   }
 
   protected void checkInsertedEntries(final List<ServerRun> checkOnServers) {

@@ -6,6 +6,9 @@ import java.util.List;
 public interface SetupConfig {
   List<String> getServerIds();
 
+  // returns number of servers in the setup
+  int getClusterSize();
+
   // Used for deploying the config in a local setup.
   String getLocalConfigFile(String serverId);
 

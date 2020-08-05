@@ -177,12 +177,12 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
 
     final ExecutorService writerExecutors = Executors.newCachedThreadPool();
 
-    runningWriters = new CountDownLatch(serverInstance.size() * writerCount);
+    runningWriters = new CountDownLatch(setupConfig.getClusterSize() * writerCount);
 
     int serverId = 0;
     int threadId = 0;
     List<Callable<Void>> writerWorkers = new ArrayList<Callable<Void>>();
-    for (ServerRun server : serverInstance) {
+    for (ServerRun server : localSetup.getServers()) {
       for (int j = 0; j < writerCount; j++) {
         Callable writer = createWriter(serverId, threadId++, server);
         writerWorkers.add(writer);
@@ -211,7 +211,7 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
   }
 
   protected void dumpDistributedDatabaseCfgOfAllTheServers() {
-    for (ServerRun s : serverInstance) {
+    for (ServerRun s : localSetup.getServers()) {
       final ODistributedServerManager dManager = s.getServerInstance().getDistributedManager();
       final ODistributedConfiguration cfg = dManager.getDatabaseConfiguration(getDatabaseName());
       final String cfgOutput =
@@ -231,7 +231,7 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
   }
 
   protected void checkThePersonClassIsPresentOnAllTheServers() {
-    for (ServerRun s : serverInstance) {
+    for (ServerRun s : localSetup.getServers()) {
       // CHECK THE CLASS WAS CREATED ON ALL THE SERVERS
       ODatabaseDocument database = getDatabase(s);
       try {
