@@ -48,15 +48,15 @@ public abstract class AbstractDistributedConcurrentTxTest extends AbstractDistri
   protected boolean expectedConcurrentException = true;
 
   class TxWriter implements Callable<Void> {
-    private final int serverId;
+    private final String serverId;
 
-    public TxWriter(final int iServerId) {
+    public TxWriter(final String iServerId) {
       serverId = iServerId;
     }
 
     @Override
     public Void call() throws Exception {
-      String name = Integer.toString(serverId);
+      String name = serverId;
 
       for (int i = 0; i < count; i++) {
         final ODatabaseDocument graph = getDatabase(serverId);
@@ -181,7 +181,7 @@ public abstract class AbstractDistributedConcurrentTxTest extends AbstractDistri
   }
 
   @Override
-  protected Callable<Void> createWriter(final int serverId, final int threadId, ServerRun server) {
+  protected Callable<Void> createWriter(final String serverId, final int threadId, ServerRun server) {
     return new TxWriter(serverId);
   }
 

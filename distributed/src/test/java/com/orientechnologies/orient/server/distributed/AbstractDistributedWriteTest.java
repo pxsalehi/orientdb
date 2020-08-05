@@ -51,10 +51,10 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
   // OPartitionedDatabasePoolFactory();
 
   class Writer implements Callable<Void> {
-    private int serverId;
+    private String serverId;
     private int threadId;
 
-    public Writer(final int iServerId, final int iThreadId) {
+    public Writer(final String iServerId, final int iThreadId) {
       serverId = iServerId;
       threadId = iThreadId;
     }
@@ -177,17 +177,15 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
 
     final ExecutorService writerExecutors = Executors.newCachedThreadPool();
 
-    runningWriters = new CountDownLatch(serverInstance.size() * writerCount);
+    runningWriters = new CountDownLatch(setupConfig.getServerIds().size() * writerCount);
 
-    int serverId = 0;
     int threadId = 0;
     List<Callable<Void>> writerWorkers = new ArrayList<Callable<Void>>();
-    for (ServerRun server : serverInstance) {
+    for (ServerRun server : localSetup.getServers()) {
       for (int j = 0; j < writerCount; j++) {
-        Callable writer = createWriter(serverId, threadId++, server);
+        Callable writer = createWriter(server.getServerId(), threadId++, server);
         writerWorkers.add(writer);
       }
-      serverId++;
     }
     List<Future<Void>> futures = writerExecutors.invokeAll(writerWorkers);
 
@@ -206,12 +204,12 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
   protected abstract String getDatabaseURL(ServerRun server);
 
   protected Callable<Void> createWriter(
-      final int serverId, final int threadId, final ServerRun serverRun) {
+      final String serverId, final int threadId, final ServerRun serverRun) {
     return new Writer(serverId, threadId);
   }
 
   protected void dumpDistributedDatabaseCfgOfAllTheServers() {
-    for (ServerRun s : serverInstance) {
+    for (ServerRun s : localSetup.getServers()) {
       final ODistributedServerManager dManager = s.getServerInstance().getDistributedManager();
       final ODistributedConfiguration cfg = dManager.getDatabaseConfiguration(getDatabaseName());
       final String cfgOutput =
@@ -231,7 +229,7 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
   }
 
   protected void checkThePersonClassIsPresentOnAllTheServers() {
-    for (ServerRun s : serverInstance) {
+    for (ServerRun s : localSetup.getServers()) {
       // CHECK THE CLASS WAS CREATED ON ALL THE SERVERS
       ODatabaseDocument database = getDatabase(s);
       try {

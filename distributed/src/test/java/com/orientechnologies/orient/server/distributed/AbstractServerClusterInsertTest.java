@@ -60,9 +60,9 @@ public abstract class AbstractServerClusterInsertTest extends AbstractDistribute
   protected long expected;
   protected OIndex idx;
   protected int maxRetries = 5;
-  protected boolean         useTransactions       = false;
+  protected boolean useTransactions = false;
   protected List<ServerRun> executeTestsOnServers = null;
-  protected String          className             = "Person";
+  protected String className = "Person";
   protected String indexName = "Person.name";
 
   protected class BaseWriter implements Callable<Void> {
@@ -337,14 +337,13 @@ public abstract class AbstractServerClusterInsertTest extends AbstractDistribute
   protected void prepare(boolean iCopyDatabaseToNodes, boolean iCreateDatabase) throws Exception {
     super.prepare(iCopyDatabaseToNodes, iCreateDatabase);
 
-    executeTestsOnServers = new ArrayList<ServerRun>(serverInstance);
+    executeTestsOnServers = new ArrayList<ServerRun>(localSetup.getServers());
   }
 
   protected void executeMultipleTest(final int serverNum)
       throws InterruptedException, java.util.concurrent.ExecutionException {
-    ODatabaseDocument database =
-        getDatabase(
-            serverNum); // serverInstance.get(serverNum).getEmbeddedDatabase(getDatabaseName());
+    ODatabaseDocument database = getDatabase(serverNum);
+    // serverInstance.get(serverNum).getEmbeddedDatabase(getDatabaseName());
 
     try {
       List<ODocument> result =

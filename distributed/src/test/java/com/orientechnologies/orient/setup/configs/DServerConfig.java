@@ -1,12 +1,12 @@
 package com.orientechnologies.orient.setup.configs;
 
 import com.orientechnologies.orient.setup.K8sServerConfig;
-import com.orientechnologies.orient.setup.TestConfig;
+import com.orientechnologies.orient.setup.SetupConfig;
 import com.orientechnologies.orient.setup.TestSetupUtil;
 
 import java.util.*;
 
-public class DServerConfig implements TestConfig {
+public class DServerConfig implements SetupConfig {
   public static final String SERVER0 = "0";
   public static final String SERVER1 = "1";
   public static final String SERVER2 = "2";
