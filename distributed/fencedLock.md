@@ -14,29 +14,45 @@ A lot of metadata is stored locally on each server and distributed locking and H
 
 `getAvailableNodeNames` simply reads node status from the HC map! Which could be easily outdated!
 
-Following operations rely on the distributed locking (and `DBNAME_LOCK`) in Hazelcast:
+**TODO**: find relation of the following operations with this metadata kept on OHazelcastDistributedMap:
+*  getDatabaseStatus
 
-1. `reassignClusterOwnership`: Called when a node joins or leaves the cluster. The lock is required to ensure that only one node performs the reassignment of clusters or creation of new ones. This operation results in an update to distributed config of a DB which get sent to other nodes by storing it in the MAP and sending an `OUpdateDatabaseConfigurationTask` to all other servers. **Why is the lock needed**?  
+Following operations rely on the distributed locking (and `DBNAME_LOCK`) in Hazelcast. The lock is used to ensure these operations are not performed in parallel.
+
+##### reassignClusterOwnership
+Called when a node joins or leaves the cluster. The lock is required to ensure that only one node performs the reassignment of clusters or creation of new ones. This operation results in an update to distributed config of a DB which get sent to other nodes by storing it in the MAP and sending an `OUpdateDatabaseConfigurationTask` to all other servers. 
+
+Why is the lock needed? To ensure that only one master will create the new distributed config for that DB. Any master getting the lock afterwards, results in producing the same config for the DB. The new config is saved to the IMap and 'pushed' to other masters which simply replace their local DB config.
+
+Having a raft leader in charge of accepting and calculating config changes might make the distributed lock unnecessary.
   
-2. `installDatabase`
+##### installDatabase
+Triggers a full/delta sync.
 
-3. Node joining the HC cluster: Once a node joins the cluster, its databases is also 'merged' with the rest of the cluster!
+##### Node joining the HC cluster
+Once a node joins the cluster, its databases is also 'merged' with the rest of the cluster!
 
-4. `installResponseNewDeltaSync`
+##### installResponseNewDeltaSync
 
-5. `loadLocalDatabases`
+##### loadLocalDatabases
 
-6. `installClustersOfClass`
+##### installClustersOfClass
 
-7. `installDatabaseOnLocalNode`
+##### installDatabaseOnLocalNode
 
-8. `removeNodeFromConfiguration`
+##### removeNodeFromConfiguration
 
-9. `checkNodeInConfiguration`/`registerNewDatabaseIfNeeded`: Once a node loads its local version of a distributed database, it will add itself as one of the nodes/masters for that database.
+##### checkNodeInConfiguration/registerNewDatabaseIfNeeded
+Once a node loads its local version of a distributed database, it will add itself as one of the nodes/masters for that database.
 
-10. drop database
+##### drop database
 
-11. `createClusters` (for a database)
+##### createClusters (for a database)
 
-12. `OSchemaDistributed.acquireSchemaWriteLock` also acquires the lock.
+##### OSchemaDistributed.acquireSchemaWriteLock 
+also acquires the lock.
 
+---
+Following need to be checked if we move away from Map+Lock:
+* OClusterHealthChecker
+* DB_STATUS
