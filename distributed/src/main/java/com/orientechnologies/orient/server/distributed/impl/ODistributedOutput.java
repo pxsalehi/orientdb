@@ -31,6 +31,8 @@ import com.orientechnologies.orient.server.distributed.ODistributedConfiguration
 import com.orientechnologies.orient.server.distributed.ODistributedRequestId;
 import com.orientechnologies.orient.server.distributed.ODistributedServerManager;
 import com.orientechnologies.orient.server.distributed.ODistributedTxContext;
+import com.orientechnologies.orient.server.distributed.cluster.OClusterDBConfig;
+import com.orientechnologies.orient.server.distributed.cluster.OClusterMetadataManager;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -493,12 +495,31 @@ public class ODistributedOutput {
     return buffer.toString();
   }
 
+  /**
+   * Returns true if the quorum is present in terms of number of available nodes for full
+   * replication only.
+   */
+  public static boolean isWriteQuorumPresent(
+      final OClusterMetadataManager manager, final String databaseName) {
+    OClusterDBConfig dbConfig = manager.getDatabaseConfig(databaseName);
+    final ODistributedConfiguration cfg = dbConfig.getDistributedConfiguration();
+    if (cfg != null) {
+      final int availableServers = manager.getActiveNodes(databaseName).size();
+      if (availableServers == 0) return false;
+
+      final int quorum =
+          cfg.getWriteQuorum(null, cfg.getMasterServers().size(), manager.getLocalNodeName());
+      return availableServers >= quorum;
+    }
+    return false;
+  }
+
   public static String formatClusterTable(
-      final ODistributedServerManager manager,
-      final String databaseName,
-      final ODistributedConfiguration cfg,
-      final int totalConfiguredServers) {
+      final OClusterMetadataManager manager, final String databaseName) {
     final StringBuilder buffer = new StringBuilder();
+    OClusterDBConfig dbConfig = manager.getDatabaseConfig(databaseName);
+    ODistributedConfiguration cfg = dbConfig.getDistributedConfiguration();
+    int totalConfiguredServers = dbConfig.getNodes().size();
 
     if (cfg.hasDataCenterConfiguration()) {
       buffer.append("\n\nDATA CENTER CONFIGURATION");
@@ -533,7 +554,7 @@ public class ODistributedOutput {
 
     buffer.append(
         "\n\nCLUSTER CONFIGURATION [wQuorum: "
-            + manager.isWriteQuorumPresent(databaseName)
+            + isWriteQuorumPresent(manager, databaseName)
             + "] (LEGEND: X = Owner, o = Copy)");
 
     final OTableFormatter table =

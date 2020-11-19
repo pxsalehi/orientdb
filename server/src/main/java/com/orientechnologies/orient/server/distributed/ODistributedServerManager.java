@@ -24,6 +24,7 @@ import com.orientechnologies.orient.core.db.ODatabaseDocumentInternal;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.distributed.ODistributedRequest.EXECUTION_MODE;
+import com.orientechnologies.orient.server.distributed.cluster.OClusterMetadataManager;
 import com.orientechnologies.orient.server.distributed.conflict.ODistributedConflictResolverFactory;
 import com.orientechnologies.orient.server.distributed.task.ORemoteTask;
 import java.io.File;
@@ -100,8 +101,6 @@ public interface ODistributedServerManager {
 
   boolean isNodeAvailable(String iNodeName);
 
-  Set<String> getAvailableNodeNames(String databaseName);
-
   @Deprecated
   String getCoordinatorServer();
 
@@ -148,8 +147,9 @@ public interface ODistributedServerManager {
 
   ODistributedStrategy getDistributedStrategy();
 
-  void setDistributedStrategy(ODistributedStrategy streatgy);
+  void setDistributedStrategy(ODistributedStrategy strategy);
 
+  // TODO: the boolean at the end is not necessary! Every usage also deploys to cluster.
   boolean updateCachedDatabaseConfiguration(
       String iDatabaseName, OModifiableDistributedConfiguration cfg, boolean iDeployToCluster);
 
@@ -165,8 +165,9 @@ public interface ODistributedServerManager {
       OModifiableDistributedConfiguration cfg,
       boolean canCreateNewClusters);
 
+  // TODO: most of the following 7 methods do the same thing!?
   /** Available means not OFFLINE, so ONLINE or SYNCHRONIZING. */
-  boolean isNodeAvailable(String iNodeName, String databaseName);
+  boolean isNodeAvailable(String nodeName, String databaseName);
 
   /** Returns true if the node status is ONLINE. */
   boolean isNodeOnline(String iNodeName, String databaseName);
@@ -176,6 +177,10 @@ public interface ODistributedServerManager {
   int getAvailableNodes(String iDatabaseName);
 
   int getAvailableNodes(Collection<String> iNodes, String databaseName);
+
+  List<String> getOnlineNodes(String iDatabaseName);
+
+  Set<String> getAvailableNodeNames(String databaseName);
 
   boolean isOffline();
 
@@ -191,7 +196,7 @@ public interface ODistributedServerManager {
 
   ODocument getNodeConfigurationByUuid(String iNode, boolean useCache);
 
-  ODocument getLocalNodeConfiguration();
+//  ODocument getLocalNodeConfiguration();
 
   ODistributedConfiguration getDatabaseConfiguration(String iDatabaseName);
 
@@ -232,8 +237,6 @@ public interface ODistributedServerManager {
   ODocument getStats();
 
   Throwable convertException(Throwable original);
-
-  List<String> getOnlineNodes(String iDatabaseName);
 
   boolean installDatabase(
       boolean iStartup, String databaseName, boolean forceDeployment, boolean tryWithDeltaFirst);
@@ -276,13 +279,7 @@ public interface ODistributedServerManager {
       OModifiableDistributedConfiguration lastCfg,
       OCallable<T, OModifiableDistributedConfiguration> iCallback);
 
-  /**
-   * Returns true if the quorum is present in terms of number of available nodes for full
-   * replication only. With sharding, instead, the quorum may depend on the involved clusters.
-   *
-   * @return
-   */
-  boolean isWriteQuorumPresent(String databaseName);
+  OClusterMetadataManager getClusterMetadataManager();
 
   void notifyClients(String databaseName);
 

@@ -91,7 +91,7 @@ public class OCommandExecutorSQLHAStatus extends OCommandExecutorSQLAbstract
       if (parsedStatement.db)
         output.append(
             ODistributedOutput.formatClusterTable(
-                dManager, databaseName, cfg, dManager.getTotalNodes(databaseName)));
+                dManager.getClusterMetadataManager(), databaseName));
       if (parsedStatement.latency)
         output.append(
             ODistributedOutput.formatLatency(dManager, dManager.getClusterConfiguration()));

@@ -44,6 +44,8 @@ import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.distributed.*;
 import com.orientechnologies.orient.server.distributed.ODistributedServerLog.DIRECTION;
 import com.orientechnologies.orient.server.distributed.ODistributedServerManager.DB_STATUS;
+import com.orientechnologies.orient.server.distributed.cluster.OClusterDBConfig;
+import com.orientechnologies.orient.server.distributed.cluster.OClusterMetadataManager;
 import com.orientechnologies.orient.server.distributed.impl.lock.OFreezeGuard;
 import com.orientechnologies.orient.server.distributed.impl.lock.OLockGuard;
 import com.orientechnologies.orient.server.distributed.impl.lock.OLockManager;
@@ -75,7 +77,7 @@ public class ODistributedDatabaseImpl implements ODistributedDatabase {
   private final OTxPromiseManager<ORID> recordPromiseManager;
   private final OTxPromiseManager<Object> indexKeyPromiseManager;
   private final AtomicLong pending = new AtomicLong();
-  private final ODistributedConfigurationManager configurationManager;
+  private final OClusterDBConfig configurationManager;
   protected Map<ODistributedRequestId, ODistributedTxContext> activeTxContexts =
       new ConcurrentHashMap<>(64);
   private AtomicLong totalSentRequests = new AtomicLong();
@@ -92,6 +94,7 @@ public class ODistributedDatabaseImpl implements ODistributedDatabase {
   private OSyncSource lastValidBackup;
   private volatile DB_STATUS freezePrevStatus;
   private OFreezeGuard freezeGuard;
+  private OClusterMetadataManager clusterMetadataManager;
 
   public ODistributedDatabaseImpl(
       final OHazelcastPlugin manager,
@@ -102,7 +105,16 @@ public class ODistributedDatabaseImpl implements ODistributedDatabase {
     this.msgService = msgService;
     this.databaseName = iDatabaseName;
     this.localNodeName = manager.getLocalNodeName();
-    this.configurationManager = new ODistributedConfigurationManager(manager, iDatabaseName);
+    this.clusterMetadataManager = manager.getClusterMetadataManager();
+    this.configurationManager =
+        new ODistributedConfigurationManager(
+            clusterMetadataManager,
+            manager.getConfigurationMap(),
+            localNodeName,
+            server.getDatabaseDirectory(),
+            databaseName,
+            manager.defaultDatabaseConfigFile);
+    clusterMetadataManager.setDatabaseConfig(databaseName, configurationManager);
 
     // SELF REGISTERING ITSELF HERE BECAUSE IT'S NEEDED FURTHER IN THE CALL CHAIN
     final ODistributedDatabaseImpl prev = msgService.databases.put(iDatabaseName, this);
@@ -978,7 +990,7 @@ public class ODistributedDatabaseImpl implements ODistributedDatabase {
   }
 
   public void saveDatabaseConfiguration() {
-    configurationManager.saveDatabaseConfiguration();
+    configurationManager.saveDistributedConfiguration();
   }
 
   public synchronized void freezeStatus() {

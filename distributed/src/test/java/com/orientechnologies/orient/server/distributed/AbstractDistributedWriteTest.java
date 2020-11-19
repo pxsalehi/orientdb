@@ -215,7 +215,7 @@ public abstract class AbstractDistributedWriteTest extends AbstractServerCluster
       final ODistributedConfiguration cfg = dManager.getDatabaseConfiguration(getDatabaseName());
       final String cfgOutput =
           ODistributedOutput.formatClusterTable(
-              dManager, getDatabaseName(), cfg, dManager.getAvailableNodes(getDatabaseName()));
+              dManager.getClusterMetadataManager(), getDatabaseName());
 
       ODistributedServerLog.info(
           this,
